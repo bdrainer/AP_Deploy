@@ -1,122 +1,11 @@
 # Installation Guide
 
-## Intro
-
-These are the steps for installing the IAT system in an AWS environment using Kubernetes (K8s) for container 
+These are the steps for installing the __IAT system__ in an __AWS__ environment using __Kubernetes__ (K8s) for container 
 orchestration.
 
-This repository is __required__ to be private.  It holds secrets only authorized
-users should have access to.
+Before proceeding read [README](README.md)
 
-### Objective
-
-Steps of the installation process result in configuration values needed for other steps.  
-
-Configuration values are saved in __gradle.properties__.  As you work through the installation, a large part of what you will
-do is open __gradle.properties__ and set values in file.  The values in __gradle.properties__  are used when 
-by the __gen__ script.    
-
-Running the command `./gen` 
-* creates the folder `dist` where the installation files are generated
-* copies the config repo files to `config-repo`
-* requires you to be in the root of the "deploy" folder
-
-  
-## Before Starting
-
-The docs ['Installing Kubernetes on AWS with kops'](https://kubernetes.io/docs/getting-started-guides/kops/)
-and [Kubernetes kops](https://github.com/kubernetes/kops/blob/master/docs/aws.md) are worth reading.
-
-They describe a lot of what is required to run/install Kubernetes on AWS.
-
-### Docker Repository
-
-The IAT system is made up of docker images.  
-
-The K8s cluster pulls images from docker hub.  The initial configuration section below asks for the docker hub repository.
-
-It is expected the IAT images are already in the docker hub repository.
-
-### AWS Region
-
-https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
-
-It is required to use an AWS region that supports:
-* EFS
-* ElasticCache Redis
-* ElasticSearch/Kibana,
-* MySQL
-
-EFS is limited to three regions: 
-* us-east-2 US East (Ohio)	
-* us-east-1 US East (N. Virginia)	
-* us-west-2 US West (Oregon)
-
-    
-### Admin Account on AWS
-
-Make sure you have an admin account on AWS.  It should have admin level permissions for things like groups, 
-users, and APIs.
-
-The admin user must have these permissions at the least.
-
-```
-AmazonEC2FullAccess
-AmazonRoute53FullAccess
-AmazonS3FullAccess
-IAMFullAccess
-AmazonVPCFullAccess
-```
-### Clone Repository
-Clone this repository to the machine you will be doing the installation from.
-
-The machine you use should have the required tools.  
-
-### Tools
-
-The following tools are required to perform the installation.
-
-#### kops
-
-Before we can bring up the cluster we need to [install the CLI tool `kops`](https://github.com/kubernetes/kops/blob/master/docs/install.md) .
-
-#### kubectl
-
-In order to control Kubernetes clusters we need to [install the CLI tool `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
-
-#### AWS CLI
-
-The [aws guide](http://docs.aws.amazon.com/cli/latest/userguide/awscli-install-linux.html).
-
-### S3 Bucket 
-
-An S3 bucket is required.  It is the Kubernetes state store.
-
-Kops needs a state store to store cluster information.
-
-The S3 bucket is used when running ```kops``` commands.
-
-### Registered Domain / Hosted Zone
-
-The item authoring tool and item viewing service require public URLs.
-
-A registered domain (e.g. hosted zone) in AWS is required.  
-
-An example of a registered domain is "smarterbalanced.org".  
-
-### Register SSL Certificate for Domain
-
-The item authoring tool and item viewing service require HTTPS.
-
-### Spring Boot CLI
-
-Secrets are encrypted in the YAML config files served by the configuration service.
-
-The spring boot cli is used to encrypt secrets.  For example: `spring encrypt --key=secret foo`
-
-https://docs.spring.io/spring-boot/docs/current/reference/html/getting-started-installing-spring-boot.html 
-* see section 'Installing the Spring Boot CLI'  
-* install the cloud plugin: `spring install org.springframework.cloud:spring-cloud-cli:1.3.2.RELEASE`
+## Clone
 
 ## Initial Configuration
 
@@ -283,36 +172,6 @@ Once Redis is available you should have a 'Primary Endpoint'. The endpoint is us
 
 1. Open [gradle.properties](gradle.properties)
 1. Set `redis_host` using the primary endpoint, do not include port only the host.  For example set `redis_host=redis.host.on.aws.com` and not `redis_host=redis.host.on.aws.com:6397`    
-1. Save changes
-
-### Central Logs (ElasticSearch/Kibana)
-
-The IAT services post their logs to ElasticSearch.  Kibana is used to view the logs in a central location.
-
-Create an ElasticSearch domain in AWS.  Version 5.5 is suggested.
-
-One way to set the access policy is to 'Allow access to the domain from specific IP(s)'.  Look at the VPC for your
-cluster and copy the public IPs for your K8s nodes.  Use these public IPs to set the access policy.
-
-```
-"Condition": {
-    "IpAddress": {
-        "aws:SourceIp": [
-            "k8s-node-1-public-ip",
-            "k8s-node-2-public-ip",
-            ...
-          ]
-        }  
-    }
-```
-
-Once the ElasticSearch domain is available you should have a Endpoint value and a Kibana value. 
-
-#### Steps
-
-1. Open [gradle.properties](gradle.properties)
-1. Set `elastic_search_url` using the Endpoint value.
-1. Set `elastic_search_url_kibana` using the Kibana value.      
 1. Save changes
 
 ### Public URLS
@@ -552,6 +411,10 @@ Register SPs in ForgeRock OpenAM
 
 #### Install IAT
 
+
+1. Clone https://github.com/SmarterApp/AP_ItemAuthoringTool.git
+1. Open  AP_ItemAuthoringTool/deploy/config-repo/ap-iat.yml
+1. Replace all setting values where you see @REPLACE@
 1. Run `./gen`
 1. Add the file `config-repo/ap-iat.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
 1. Run `sh install-k8s-iat.sh`
