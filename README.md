@@ -6,6 +6,15 @@
 
 ## Before Starting
 
+### Git
+
+A GitHub account is required.  You will fork this repository.
+
+You will clone your fork to a dev-ops machine of your choice.  You will commit and push changes
+to your private fork.
+
+The dev-ops machine requires a git client to run commands like clone and commit. 
+
 ### Docker Repository
 
 The IAT system is made up of docker images.  The K8s cluster pulls these images from docker hub.

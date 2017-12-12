@@ -1,11 +1,24 @@
 # Installation Guide
 
-These are the steps for installing the __IAT system__ in an __AWS__ environment using __Kubernetes__ (K8s) for container 
-orchestration.
+These are the steps for installing the __IAT system__ in an __AWS__ environment using __Kubernetes__ (K8s).
 
-Before proceeding read [README](README.md)
+Before proceeding see [README](README.md).
 
-## Clone
+## Fork
+
+Forking the "source" repositories allow you to maintain your settings privately while
+still being able to rebase against the "source" to pull in changes.  
+
+The "source" files could add or delete settings, add or remove services, and
+update the cluster configuration.  
+
+You can sync your fork with the "source" - see [Syncing a Fork](https://help.github.com/articles/syncing-a-fork/)
+
+Fork these repositories to your dev-ops environment.
+
+* [AP_Deploy](https://github.com/SmarterApp/AP_Deploy.git) - Holds the cluster configuration. 
+
+* [AP_Config](https://github.com/SmarterApp/AP_Config.git) - Holds the micro-service configuration.
 
 ## Initial Configuration
 

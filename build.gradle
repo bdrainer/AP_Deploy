@@ -1,0 +1,121 @@
+/*
+ *  Copyright 2017 Regents of the University of California.
+ *
+ *  Licensed under the Educational Community License, Version 2.0 (the "license");
+ *  you may not use this file except in compliance with the License. You may
+ *  obtain a copy of the license at
+ *
+ *  https://opensource.org/licenses/ECL-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+buildscript {
+    ext {
+        springBootVersion = '1.5.2.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'maven-publish'
+}
+
+ext {
+    tokens = [
+            BUILD_DIR                       : project.buildDir.name,
+            AWS_STATE_STORE_NAME            : project.aws_state_store_name,
+            AWS_ARN_SSL_CERTIFICATE         : project.aws_arn_ssl_certificate,
+            K8S_CLUSTER_NAME                : project.k8s_cluster_name,
+            K8S_NODE_ZONE                   : project.k8s_node_zone,
+            K8S_NODE_SIZE                   : project.k8s_node_size,
+            K8S_MASTER_ZONE                 : project.k8s_master_zone,
+            K8S_NODE_SIZE                   : project.k8s_master_size,
+            K8S_DNS_ZONE                    : project.k8s_dns_zone,
+            GITLAB_HOST                     : project.gitlab_host,
+            GITLAB_GROUP                    : project.gitlab_group,
+            GITLAB_ACCESS_TOKEN             : project.gitlab_access_token,
+            GITLAB_USER                     : project.gitlab_user,
+            GITLAB_PASSWORD                 : project.gitlab_password,
+            GITLAB_IVS_WEBHOOK_SECRET       : project.gitlab_ivs_webhook_secret,
+            ELASTIC_SEARCH_URL              : project.elastic_search_url,
+            ELASTIC_SEARCH_URL_KIBANA       : project.elastic_search_url_kibana,
+            REDIS_HOST                      : project.redis_host,
+            SAML_KS_FILE                    : project.saml_ks_file,
+            SAML_KS_PASSWORD                : project.saml_ks_password,
+            SAML_PKE_ALIAS                  : project.saml_pke_alias,
+            SAML_PKE_PASSWORD               : project.saml_pke_password,
+            SAML_IDP_METADATA_URL           : project.saml_idp_metadata_url,
+            SAML_SP_ENTITY_ID_IAT           : project.saml_sp_entity_id_iat,
+            SAML_SP_ENTITY_ID_IVP           : project.saml_sp_entity_id_ivp,
+            PUBLIC_HOST_NAME_AUTHORING_TOOL : project.public_host_name_authoring_tool,
+            PUBLIC_HOST_NAME_VIEWING_SERVICE: project.public_host_name_viewing_service,
+            CONFIG_SERVICE_REPO_URL         : project.config_service_repo_url,
+            CONFIG_SERVICE_GIT_USER         : project.config_service_git_user,
+            CONFIG_SERVICE_GIT_PASSWORD     : project.config_service_git_password,
+            CONFIG_SERVICE_ENCRYPT_KEY      : project.encrypt_key,
+            DOCKER_REPOSITORY               : project.docker_repository,
+            DB_URL                          : project.db_url,
+            DB_USER                         : project.db_user,
+            DB_PASSWORD                     : project.db_password,
+            RABBITMQ_PASSWORD               : project.rabbitmq_password,
+            AWS_EFS_DNS_NAME                : project.aws_efs_dns_name,
+            AWS_EFS_REPORT_DNS_NAME         : project.aws_efs_report_dns_name,
+            VERSION_IAT                     : project.version_iat,
+            VERSION_IAT_IVS                 : project.version_iat_ivs,
+            VERSION_IAT_WIRIS               : project.version_iat_wiris,
+            VERSION_IMS                     : project.version_ims,
+            VERSION_IRJ                     : project.version_irj,
+            VERSION_IRS                     : project.version_irs,
+            VERSION_IVP                     : project.version_ivp,
+            VERSION_IVS                     : project.version_ivs
+    ]
+}
+
+defaultTasks 'clean', 'filterDefault'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://airdev.jfrog.io/airdev/libs-releases/" }
+    maven { url "https://airdev.jfrog.io/airdev/libs-snapshots/" }
+}
+
+dependencies {
+
+}
+
+task filterDefault(type: Copy) {
+
+    from('template/') {
+        filter(ReplaceTokens, tokens: project.tokens)
+    }
+
+    into "${project.buildDir}"
+}
+
+//task filterCluster(type: Copy) {
+//
+//    from('template/k8s-cluster') {
+//        filter(ReplaceTokens, tokens: project.tokens)
+//    }
+//
+//    into "${project.buildDir}"
+//}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.3.1'
+}
+
+clean.dependsOn cleanBuild
