@@ -4,7 +4,7 @@ These are the steps for installing the __IAT system__ in an __AWS__ environment 
 
 Before proceeding see [README](README.md).
 
-Confirm you have forked this repository so you can make your change in a secure
+Confirm you have forked this repository (or copied it) so you can make your change in a secure
 environment you control.
 
 ## Initial Configuration
