@@ -9,7 +9,9 @@
 ### Git 
 
 Forking the deploy repository allows you to maintain your settings privately while
-being able to synchronize with upstream changes.  
+being able to synchronize with upstream changes.  It isn't a requirement to fork.  Creating your own repository
+and manually copying the contents of AP_Deploy would work as well.  You could _diff_ directories to pull in changes
+between AP_Deploy and your copy.
 
 See [Syncing a Fork](https://help.github.com/articles/syncing-a-fork/)
 
