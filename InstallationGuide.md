@@ -13,13 +13,12 @@ Here we will set properties to prepare for the first steps of the installation.
 
 ### Steps
 
-1. set `export IAT_DEPLOY_SECRET_KEY=replace-with-your-key` in your bash profile to any secret key of your choice.
+1. Open [gradle.properties](gradle.properties)
+1. set `encrypt_key`
     * __IMPORTANT__ - The value can be anything, but once set don't change it.
     * The value is used to encrypt secrets. 
     * They are decrypted by the config service.  
     * The key you encrypt with must be the same the config service decrypts with.
-1. source the bash profile so any terminal window you are working from will have the environment variable set.
-1. Open [gradle.properties](gradle.properties)
 1. set `aws_state_store_name`
     * Example: `kops-iat-production-state-store`
 1. set `k8s_cluster_name`
