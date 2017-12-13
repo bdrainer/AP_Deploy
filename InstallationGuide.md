@@ -40,14 +40,13 @@ Here we will set properties to prepare for the first steps of the installation.
 
 ### Item Bank (GitLab)
 
-The IAT system requires GitLab. 
-
-IAT executes GIT commands like 'push' and 'merge' which require user credentials (username and password).
-
-IAT executes GitLab API calls which requires an access token.
+The IAT system requires GitLab.  The IAT system is configured with a user for interacting with GitLab. 
 
 #### Steps
 
+1. Create an account in GitLab for the IAT system to use.
+1. Create an impersonation token for the user.
+1. Create a GitLab group.  This represents the item bank the IAT system will use.
 1. Open [gradle.properties](gradle.properties)
 1. Set `gitlab_host` to the GitLab host instance 
 1. Set `gitlab_group` to the name of the group
@@ -197,8 +196,10 @@ This repository is referred to as _**config-repo**_ throughout this document.
 #### Steps
 
 1. Create a private GitHub repository for storing the configuration files.
-1. Create a user the IAT system will use when connecting to this repository.
+    * Example: `AP_Config_Production`
+1. Create a Git user so the IAT system can use it to connect.
 1. Run `./gen`
+    * *must run the gen script so the next step is setup properly*
 1. Add, commit, and push the file `config-repo/application.yml` to master branch of the config-repo. 
 
 ### Config Service
@@ -346,7 +347,7 @@ Once the instance is created you will have a DNS name for it.
 
 #### Install IVS
 
-1. Run `.install-k8s-ivs.sh`
+1. Run `./install-k8s-ivs.sh`
 
 #### Install SSO
 
@@ -356,7 +357,6 @@ A service provider needs created in OpenAM for the viewer proxy.
 
 Register SPs in ForgeRock OpenAM
 
-1. Run `./gen`
 1. Navigate to Federation, Entity Providers
 1. Import Entity using the URL 
 1. Insert the URL of the IVS public URL - http://{ivs-public-url}/saml/metadata 
@@ -410,7 +410,6 @@ We need to register IAT as a service provider (SP) in ForgeRock OpenAM.
 1. Import Entity using the URL 
 1. Insert the URL of the IVS public URL - http://{iat-public-url}/saml/metadata 
 1. Add newly created entity to circle-of-trust of the identify provider (IDP)
-
 
 #### Verify
 
