@@ -22,7 +22,7 @@ Here we will set properties to prepare for the first steps of the installation.
 1. set `aws_state_store_name`
     * Example: `kops-iat-production-state-store`
 1. set `k8s_cluster_name`
-    * Example: ap-iat.smarterbalanced.org
+    * Example: `ap-iat.smarterbalanced.org`
 1. set `k8s_node_zone`
     * Example: `us-west-2a`
 1. set `k8s_node_size`
