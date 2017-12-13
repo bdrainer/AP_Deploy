@@ -46,6 +46,7 @@ The IAT system requires GitLab.  The IAT system is configured with a user for in
 1. Create an account in GitLab for the IAT system to use.
 1. Create an impersonation token for the user.
 1. Create a GitLab group.  This represents the item bank the IAT system will use.
+1. Give the user access to the group. 
 1. Open [gradle.properties](gradle.properties)
 1. Set `gitlab_host` to the GitLab host instance 
 1. Set `gitlab_group` to the name of the group
@@ -89,7 +90,8 @@ We are using _ap-iat-sp_ as the alias value.  It is important to use this name.
 1. Run `openssl s_client -connect sso.smarterbalanced.org:443 > sso.crt`
 1. Edit `sso.crt`, delete everything that isn't between (and including) BEGIN/END lines (_the BEGIN/END **should** remain in the file, **do not delete them**_)
 1. Import cert into keystore `keytool -import -trustcacerts -alias sso -file ./sso.crt -keystore ./ap-iat-keystore.jks`
-1. Add `ap-iat-keystore.jks` to the config-repo.  It must be added, committed, and pushed to the master branch.
+
+You will add `ap-iat-keystore.jks` to the config-repo in a later step.
 
 ## AWS Infrastructure
 
@@ -199,7 +201,9 @@ This repository is referred to as _**config-repo**_ throughout this document.
 1. Create a Git user so the IAT system can use it to connect.
 1. Run `./gen`
     * *must run the gen script so the next step is setup properly*
-1. Add, commit, and push the file `config-repo/application.yml` to master branch of the config-repo. 
+1. Add, commit, and push files to master branch of the config-repo:
+    * `config-repo/application.yml` 
+    * `ap-iat-keystore.jks` (_created in a previous step_)
 
 ### Config Service
 
