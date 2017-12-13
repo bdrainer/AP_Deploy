@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: iat-ingress
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  rules:
+  - host: @PUBLIC_HOST_NAME_AUTHORING_TOOL@
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ap-iat-service
+          servicePort: 80
+  - host: @PUBLIC_HOST_NAME_VIEWING_SERVICE@
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: item-viewer-proxy-service
+          servicePort: 80

@@ -6,9 +6,16 @@
 
 ## Before Starting
 
-### Git
+### Git 
 
-A GitHub account is required.  You will fork this repository.
+Forking the deploy repository allows you to maintain your settings privately while
+being able to synchronize with upstream changes.  
+
+See [Syncing a Fork](https://help.github.com/articles/syncing-a-fork/)
+
+Fork this repository to your dev-ops environment.
+
+* [AP_Deploy](https://github.com/SmarterApp/AP_Deploy.git) - Holds the cluster configuration. 
 
 You will clone your fork to a dev-ops machine of your choice.  You will commit and push changes
 to your private fork.

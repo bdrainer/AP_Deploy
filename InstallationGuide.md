@@ -4,21 +4,8 @@ These are the steps for installing the __IAT system__ in an __AWS__ environment 
 
 Before proceeding see [README](README.md).
 
-## Fork
-
-Forking the "source" repositories allow you to maintain your settings privately while
-still being able to rebase against the "source" to pull in changes.  
-
-The "source" files could add or delete settings, add or remove services, and
-update the cluster configuration.  
-
-You can sync your fork with the "source" - see [Syncing a Fork](https://help.github.com/articles/syncing-a-fork/)
-
-Fork these repositories to your dev-ops environment.
-
-* [AP_Deploy](https://github.com/SmarterApp/AP_Deploy.git) - Holds the cluster configuration. 
-
-* [AP_Config](https://github.com/SmarterApp/AP_Config.git) - Holds the micro-service configuration.
+Confirm you have forked this repository so you can make your change in a secure
+environment you control.
 
 ## Initial Configuration
 
@@ -26,16 +13,15 @@ Here we will set properties to prepare for the first steps of the installation.
 
 ### Steps
 
+1. set `export IAT_DEPLOY_SECRET_KEY=replace-with-your-key` in your bash profile to any secret key of your choice.
+    * __IMPORTANT__ - The value can be anything, but once set don't change it.
+    * The value is used to encrypt secrets. 
+    * They are decrypted by the config service.  
+    * The key you encrypt with must be the same the config service decrypts with.
+1. source the bash profile so any terminal window you are working from will have the environment variable set.
 1. Open [gradle.properties](gradle.properties)
-1. set `encrypt_key`
-    * !IMPORTANT! The value can be anything, but once set don't change it.
-    * The value is used to encrypt secrets. They are decrypted by the config service.  The key you encrypt
-    with must be the same the config service decrypts with.  
-1. set `docker_repository`
-    * The location the k8s cluster pulls docker images from.  Images like ims, iat, config-service, etc.  
-    * Example: `smarterbalanced`
 1. set `aws_state_store_name`
-    * Example: `kops-iat-stage-state-store`
+    * Example: `kops-iat-production-state-store`
 1. set `k8s_cluster_name`
     * Example: ap-iat.smarterbalanced.org
 1. set `k8s_node_zone`
@@ -48,12 +34,6 @@ Here we will set properties to prepare for the first steps of the installation.
     * Example: `m4.large`
 1. set `k8s_dns_zone`
     * Example: `iat.smarterbalanced.org`
-1. set `version_iat`
-1. set `version_ims`
-1. set `version_irj`
-1. set `version_irs`
-1. set `version_ivp`
-1. set `version_ivs`
 1. Save changes
 
 ## Existing Components
@@ -69,21 +49,28 @@ IAT executes GitLab API calls which requires an access token.
 #### Steps
 
 1. Open [gradle.properties](gradle.properties)
-1. Run `./gen`
 1. Set `gitlab_host` to the GitLab host instance 
 1. Set `gitlab_group` to the name of the group
-1. Run `sh encrypt.sh {gitlab_access_token}`  - replace with real value
-1. Set `gitlab_access_token` to the encrypted value
 1. Set `gitlab_user` to the name of the GitLab user
-1. Run `sh encrypt.sh {gitlab_password}`  - replace with real value
+1. Run `./encrypt.sh {gitlab_access_token}`  - replace with real value
+1. Set `gitlab_access_token` to the encrypted value
+1. Run `./encrypt.sh {gitlab_password}`  - replace with real value
 1. Set `gitlab_password` to the encrypted value
 1. Save changes
 
 ## SSO (OpenAM)
 
-OpenAM is the identify provider in the SAML SSO configuration.  It must have users authorized to log into the IAT application.
+OpenAM is the SSO provider for the IAT system. 
 
-Installers are required access to OpenAM so they can add the IAT service provider.
+Public access to the IAT system is done over HTTPS.
+
+### SSL
+
+1. Create a certificate in AWS for the domain the system is going to run under.
+1. Open [gradle.properties](gradle.properties)
+1. Set `aws_arn_ssl_certificate` to the full ARN of the SSL cert.
+    * Example: arn:aws:acm:us-west-2:479572410002:certificate/704d7a65-b9ef-4632-9bef-f47e75892088
+1. Save changes
 
 ### Generate KeyStore File
 
@@ -91,87 +78,70 @@ A keystore file is used to secure the passwords use in the SAML authentication f
 
 #### Steps
 
-We are naming the keystore file __ap-iat-keystore.jks__.  It is important to keep this name.
+We are naming the keystore file __ap-iat-keystore.jks__.  It is important to use this name.
 
-We are using _ap-iat-sp_ as the alias value.  It is important to keep this name.
+We are using _ap-iat-sp_ as the alias value.  It is important to use this name.
 
-1. Choose two passwords.  We will need these for future steps. We will encrypt and include them in the config-repo.
+1. Choose two passwords.  *__We will need these for future steps__*.
     * Password 1: key entry password
     * Password 2: key store password 
 1. Run `keytool -genkeypair -alias ap-iat-sp -keypass {key entry password} -keystore ap-iat-keystore.jks`
     * the first input after running the keytool command is to enter the **_key store password_**, make sure to enter the 
     key **store** password and not the key **entry** password 
-1. Run `openssl s_client -connect sso-amptest.smarterbalanced.org:443 > sso-amptest.crt`
-1. Edit `sso-amptest.crt`, delete everything that isn't between (and including) BEGIN/END lines (_the BEGIN/END **should** remain in the file, **do not delete them**_)
-1. Import cert into keystore `keytool -import -trustcacerts -alias sso-amptest -file ./sso-amptest.crt -keystore ./ap-iat-keystore.jks`
-1. Open [gradle.properties](gradle.properties)
-1. Run `./gen`
-1. Run `sh encrypt.sh {key entry password}`
-1. Set `saml_pke_password` to the encrypted value generated from the **key entry password**
-1. Run `sh encrypt.sh {key store password}`
-1. Set `saml_ks_password` to the encrypted value generated from the **key store password**
-1. Set `saml_pke_alias` to `ap-iat-sp` - this value was used in the keytool command
-1. Set `saml_ks_file` to `ap-iat-keystore.jks` - this value was used in the keytool command
-1. Set `saml_idp_metadata_url` to the OpenAM metadata URL
-1. Set `saml_sp_entity_id_iat` to an logical sp entity ID, for example `ap-iat-stage` 
-1. Set `saml_sp_entity_id_ivp` to an logical sp entity ID, for example `ap-ivp-stage`
-1. Save changes.
-1. Copy keystore file (ap-iat-keystore.jks) to `config-repo` in the Deploy Staging repository.
-1. Add and commit config-repo/ap-iat-keystore.jks
+1. Run `openssl s_client -connect sso.smarterbalanced.org:443 > sso.crt`
+1. Edit `sso.crt`, delete everything that isn't between (and including) BEGIN/END lines (_the BEGIN/END **should** remain in the file, **do not delete them**_)
+1. Import cert into keystore `keytool -import -trustcacerts -alias sso -file ./sso.crt -keystore ./ap-iat-keystore.jks`
+1. Add `ap-iat-keystore.jks` to the config-repo.  It must be added, committed, and pushed to the master branch.
 
 ## AWS Infrastructure
 
 ### Create Cluster
 
-Perform the steps from the command line.  You should be in the root
-of this repository.
+Perform the steps from the command line.  You should be in the root of this repository.
 
 #### Steps
 
-1. Run `./gen`
-1. Run `sh install-k8s-cluster.sh`
+1. Run `./install-k8s-cluster.sh`
 
 #### Verify
 
 Verify the cluster is ready.
 
-Run `kops validate cluster iatstg1.sbtds.org`
+Run `kops validate cluster {your-cluster-name}`
 
-Between 5 and 10 minutes is the expected time it takes for the 
-cluster to be ready.
+Between 5 and 10 minutes is the expected time it takes for the cluster to be ready.
 
 ### INSTALL K8s Base
 
-Run `sh install-k8s-base.sh`
+Run `./install-k8s-base.sh`
 
 ### INSTALL K8s Utilities
 
 The utilities are for monitoring.
 
-Before installing the utilities, make sure to navigate out of the "deploy" folder so you can clone a new Git repository.
+Before installing the utilities, __make sure to navigate out of the "deploy" folder__ so you can clone a new Git repository.
 We don't want to clone the new repo within the deploy repo.
 
 #### Steps
 
 The steps below ask you to modify the grafana.yaml file.  You will uncomment one line and comment out another line. 
  
+1. git clone https://github.com/kubernetes/heapster.git
+1. cd heapster
+1. vi deploy/kube-config/influxdb/grafana.yaml
 ```
-git clone https://github.com/kubernetes/heapster.git
-cd heapster
-vi deploy/kube-config/influxdb/grafana.yaml
-...
     - name: GF_SERVER_ROOT_URL
     # If you're only using the API Server proxy, set this value instead:
     value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
     # value: /
-kubectl create -f deploy/kube-config/influxdb
 ```
+4. kubectl create -f deploy/kube-config/influxdb
 
-Navigate back to the Deploy Staging repository. 
+__*Navigate back to the deploy repo*__. 
 
 ## New Components
 
-### Shared User Sessions (ElasticCache Redis)
+### ElasticCache Redis
 
 Redis stores user session data.  The data is available to all the services in the IAT system.
 
@@ -201,9 +171,9 @@ It is assumed you have an existing hosted zone in AWS.  The Route 53 records to 
 1. Login to the AWS console
 1. Navigate to your Route 53 hosted zone 
 1. Create a CNAME record for the authoring tool using the external-ip
-    * Example: iat-staging.<hosted zone>
+    * Example: iat-production.<hosted zone>
 1. Create a CNAME record for the viewing service using the external-ip
-    * Example: ivs-staging.<hosted zone>
+    * Example: ivs-production.<hosted zone>
 1. Open [gradle.properties](gradle.properties)
 1. Set `public_host_name_authoring_tool` to the full URL of the __authoring tool__ CNAME.
 1. Set `public_host_name_viewing_service` to the full URL of the __viewing service__ CNAME.
@@ -216,34 +186,33 @@ point.
 
 Ingress routes requests to the appropriate service. 
 
-1. Run `./gen`
-1. Run `sh install-k8s-iat-ingress.sh`
+1. Run `./install-k8s-iat-ingress.sh`
 
 ### Config Repo
 
 The IAT services store their configuration in a git repository.  Here we will create the repository in GitHub.
 
+This repository is referred to as _**config-repo**_ throughout this document.
+
 #### Steps
 
 1. Create a private GitHub repository for storing the configuration files.
 1. Create a user the IAT system will use when connecting to this repository.
+1. Run `./gen`
+1. Add, commit, and push the file `config-repo/application.yml` to master branch of the config-repo. 
+
+### Config Service
+
+The config service uses the config-repo created previously.  Here we will deploy the config service to the K8s cluster.
+
+#### Steps
+
 1. Open [gradle.properties](gradle.properties)
 1. Set `config_service_repo_url` to the URL of the GitHub repository. 
 1. Set `config_service_git_user` to the IAT system user you created. 
 1. Set `config_service_git_password` to the password of the IAT system user you created. 
 1. Save changes
-1. Add the file config-repo/dummy.yml to the config repo.  It must be added, committed, and pushed to the master branch.
-
-### Config Service
-
-The config service uses the config repo created previously.  Here we will deploy the config service to the K8s cluster.
-
-#### Steps
-
-1. Open [gradle.properties](gradle.properties)
-1. Confirm you are in the root of the Deploy Staging repository.
-1. Run `./gen`
-1. Run `sh install-k8s-config-service.sh`
+1. Run `./install-k8s-config-service.sh`
 
 #### Verify 
 
@@ -325,26 +294,19 @@ proceed with the next steps.
 
 The Spring Boot CLI is required to execute these steps.  See the tools section.  
 
-Make sure you are in the root of the Deploy Staging repository.
+Make sure you are in the root of the deploy repo.
 
 When the MySQL instance is available you should have an endpoint for accessing it.  And you 
 should have already created the DB app user.
 
-1. Open [gradle.properties](gradle.properties)
-1. Set `db_url` to the MySQL endpoint you have from creating the instance.
-1. Run `./gen`  (_ensures the next step is ready_)
-1. Run `sh encrypt.sh {db user}` substituting {db user} with the db app user you created.
-1. Open [gradle.properties](gradle.properties)
-1. Set `db_user` with the results of running the encrypt command on the db user.
-1. Run `sh encrypt.sh {db password}` substituting {db password} with the db app user's password.
-1. Open [gradle.properties](gradle.properties)
-1. Set `db_password` with the results of running the encrypt command on the db user password.
-
 #### Install IMS
 
-1. Run `./gen`
-1. Add the file config-repo/ap-ims.yml to the config repo.  It must be added, committed, and pushed to the master branch.
-1. Run `sh install-k8s-ims.sh`
+1. Run `git clone https://github.com/SmarterApp/AP_ItemManagementService.git`
+1. Open `AP_ItemManagementService/deploy/config-repo/ap-ims.yml`
+1. Replace all setting values where you see @REPLACE@
+    * any property with {cipher} requires the value to be encrypted
+1. Add `ap-ims.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
+1. Run `./install-k8s-ims.sh`
 
 #### Verify
 
@@ -375,14 +337,16 @@ Once the instance is created you will have a DNS name for it.
 
 #### Install Proxy
 
-1. Run `./gen`
-1. Add the file `config-repo/ap-item-viewer-proxy.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
-1. Run `sh install-k8s-item-viewer-proxy.sh`
+1. Run `git clone https://github.com/SmarterApp/AP_ItemViewerProxy.git`
+1. Open `AP_ItemViewerProxy/deploy/config-repo/ap-item-viewer-proxy.yml`
+1. Replace all setting values where you see @REPLACE@
+    * any property with {cipher} requires the value to be encrypted
+1. Add the file `ap-item-viewer-proxy.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
+1. Run `./install-k8s-item-viewer-proxy.sh`
 
 #### Install IVS
 
-1. Run `./gen`
-1. Run `sh install-k8s-ivs.sh`
+1. Run `.install-k8s-ivs.sh`
 
 #### Install SSO
 
@@ -411,9 +375,12 @@ Register SPs in ForgeRock OpenAM
 
 #### Install 
 
-1. Run `./gen`
-1. Add the file `config-repo/ap-irs.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
-1. Run `sh install-k8s-irs.sh`
+1. Run `git clone https://github.com/SmarterApp/AP_ItemRenderingService.git`
+1. Open `AP_ItemRenderingService/deploy/config-repo/ap-irs.yml`
+1. Replace all setting values where you see @REPLACE@
+    * any property with {cipher} requires the value to be encrypted
+1. Add the file `ap-irs.yml` to the config-repo.  It must be added, committed, and pushed to the master branch.
+1. Run `./install-k8s-irs.sh`
 
 #### Verify
 1. SSH into pod
@@ -424,13 +391,12 @@ Register SPs in ForgeRock OpenAM
 
 #### Install IAT
 
-
-1. Clone https://github.com/SmarterApp/AP_ItemAuthoringTool.git
-1. Open  AP_ItemAuthoringTool/deploy/config-repo/ap-iat.yml
+1. Run `git clone https://github.com/SmarterApp/AP_ItemAuthoringTool.git`
+1. Open `AP_ItemAuthoringTool/deploy/config-repo/ap-iat.yml`
 1. Replace all setting values where you see @REPLACE@
-1. Run `./gen`
-1. Add the file `config-repo/ap-iat.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
-1. Run `sh install-k8s-iat.sh`
+    * any property with {cipher} requires the value to be encrypted
+1. Add `ap-iat.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
+1. Run `./install-k8s-iat.sh`
 
 #### Install SSO
 
@@ -440,7 +406,6 @@ A service provider needs created in OpenAM for the authoring tool.
 
 We need to register IAT as a service provider (SP) in ForgeRock OpenAM.  
 
-1. Run `./gen`
 1. Navigate to Federation, Entity Providers
 1. Import Entity using the URL 
 1. Insert the URL of the IVS public URL - http://{iat-public-url}/saml/metadata 
@@ -480,9 +445,10 @@ Once the instance is created you will have a DNS name for it.
 
 #### Install IRJ
 
-1. Run `./gen`
-1. Add the file `config-repo/ap-item-report-job.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
-1. Run `sh install-k8s-item-report-job.sh`
+##### Steps
+1. Run `git clone https://github.com/SmarterApp/AP_ItemReportJob.git`
+1. Add `AP_ItemReportJob/deploy/config-repo/ap-item-report-job.yml` to the config repo.  It must be added, committed, and pushed to the master branch.
+1. Run `./install-k8s-item-report-job.sh`
 
 #### Verify
 

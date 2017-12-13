@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: configuration-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8888
+  selector:
+    app: configuration
+    tier: backend
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: configuration-deployment
+spec:
+  revisionHistoryLimit: 3
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 50%
+  template:
+    metadata:
+      labels:
+        app: configuration
+        tier: backend
+    spec:
+      containers:
+      - name: configuration
+        image: @DOCKER_REPOSITORY@/configuration-service:@VERSION_CONFIG_SERVICE@
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /health.json
+            port: 8888
+            scheme: HTTP
+          periodSeconds: 30
+          timeoutSeconds: 60
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256M
+          limits:
+            cpu: 400m
+            memory: 512M
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: CONFIG_SERVICE_REPO
+          value: "@CONFIG_SERVICE_REPO_URL@"
+        - name: GIT_USER
+          value: "@CONFIG_SERVICE_GIT_USER@"
+        - name: GIT_PASSWORD
+          value: "@CONFIG_SERVICE_GIT_PASSWORD@"
+        - name: JAVA_OPTS
+          value: "-Xmx256m"
+        - name: ENCRYPT_KEY
+          value: "@CONFIG_SERVICE_ENCRYPT_KEY@"
+        - name: SPRING_CLOUD_BUS_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_RABBIT_ENABLED
+          value: "false"
+        ports:
+        - containerPort: 8888

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iat-ivs-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: iat-ivs
+    tier: backend
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: iat-ivs-deployment
+spec:
+  revisionHistoryLimit: 2
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 50%
+  template:
+    metadata:
+      labels:
+        app: iat-ivs
+        tier: backend
+    spec:
+      containers:
+      - name: iat-ivs
+        image: @DOCKER_REPOSITORY@/ap-ivs:@VERSION_IAT_IVS@
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /manage/health.json
+            port: 8080
+            scheme: HTTP
+          periodSeconds: 120
+          timeoutSeconds: 120
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1024M
+          limits:
+            cpu: 400m
+            memory: 2048M
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: JAVA_OPTS
+          value: "-X mx1536m"
+        - name: CONFIG_SERVICE_URL
+          value: "http://configuration-service"
+        - name: CONFIG_SERVICE_ENABLED
+          value: "true"
+        ports:
+        - containerPort: 8080

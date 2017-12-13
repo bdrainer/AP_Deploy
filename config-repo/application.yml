@@ -1,0 +1,46 @@
+###########################################################
+# Default
+###########################################################
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: false
+  resources:
+    add-mappings: true
+  http:
+    multipart:
+      location: "${java.io.tmpdir}"
+      maxFileSize: "10MB"
+  redis:
+      host: ""
+
+logging:
+  level:
+    org:
+      opentestsystem:
+        ap:
+          common: "info"
+      springframework:
+        cloud:
+          config:
+            client: "warn"
+
+management:
+  security:
+    roles: "ADMIN"
+
+itembank:
+  host: ""
+  group: ""
+  accessToken: "{cipher}"
+  user: ""
+  password: "{cipher}"
+  localBaseDir: "${HOME}/ItemBank"
+  apiVersion: "/api/v4"
+  bankKey: "187"
+  lockSectionMaxRetries: "10"
+  lockSectionRetryDelayMillis: "2000"
+
+tasks:
+  itemCleanupThresholdMillis : "600000"
+  itemCleanupRunEveryMillis: "600000"
+

@@ -47,9 +47,6 @@ ext {
             GITLAB_ACCESS_TOKEN             : project.gitlab_access_token,
             GITLAB_USER                     : project.gitlab_user,
             GITLAB_PASSWORD                 : project.gitlab_password,
-            GITLAB_IVS_WEBHOOK_SECRET       : project.gitlab_ivs_webhook_secret,
-            ELASTIC_SEARCH_URL              : project.elastic_search_url,
-            ELASTIC_SEARCH_URL_KIBANA       : project.elastic_search_url_kibana,
             REDIS_HOST                      : project.redis_host,
             SAML_KS_FILE                    : project.saml_ks_file,
             SAML_KS_PASSWORD                : project.saml_ks_password,
@@ -68,9 +65,9 @@ ext {
             DB_URL                          : project.db_url,
             DB_USER                         : project.db_user,
             DB_PASSWORD                     : project.db_password,
-            RABBITMQ_PASSWORD               : project.rabbitmq_password,
             AWS_EFS_DNS_NAME                : project.aws_efs_dns_name,
             AWS_EFS_REPORT_DNS_NAME         : project.aws_efs_report_dns_name,
+            VERSION_CONFIG_SERVICE          : project.version_config_service,
             VERSION_IAT                     : project.version_iat,
             VERSION_IAT_IVS                 : project.version_iat_ivs,
             VERSION_IAT_WIRIS               : project.version_iat_wiris,
@@ -82,7 +79,7 @@ ext {
     ]
 }
 
-defaultTasks 'clean', 'filterDefault'
+defaultTasks 'clean', 'filterDefault', 'filterConfigRepo', 'filterCluster'
 
 repositories {
     mavenLocal()
@@ -99,23 +96,37 @@ dependencies {
 task filterDefault(type: Copy) {
 
     from('template/') {
+        include '*.sh'
         filter(ReplaceTokens, tokens: project.tokens)
     }
 
     into "${project.buildDir}"
 }
 
-//task filterCluster(type: Copy) {
-//
-//    from('template/k8s-cluster') {
-//        filter(ReplaceTokens, tokens: project.tokens)
-//    }
-//
-//    into "${project.buildDir}"
-//}
+task filterConfigRepo(type: Copy) {
+
+    from('template/config-repo') {
+        filter(ReplaceTokens, tokens: project.tokens)
+    }
+
+    into "${project.buildDirConfigRepo}"
+}
+
+task filterCluster(type: Copy) {
+
+    from('template/k8s-cluster') {
+        filter(ReplaceTokens, tokens: project.tokens)
+    }
+
+    into "${project.buildDir}"
+}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.3.1'
+}
+
+task cleanBuild(type: Delete) {
+    delete fileTree('config-repo/')
 }
 
 clean.dependsOn cleanBuild

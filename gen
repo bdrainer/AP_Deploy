@@ -8,7 +8,8 @@
 #
 # Make script executable: chmod +x gw
 #
-./gradlew --daemon $@
 
+
+./gradlew --daemon -q -Pencrypt_key=$IAT_DEPLOY_SECRET_KEY $@
 
 chmod 755 ./dist/*.sh
